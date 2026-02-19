@@ -70,14 +70,16 @@ func (w *Writer) WriteHeaders(headers headers.Headers) error {
 }
 
 func (w *Writer) WriteError(e HandlerError) error {
-	err := w.WriteStatusLine(BadRequest)
+	err := w.WriteStatusLine(e.StatusCode)
 	if err != nil {
 		return err
 	}
-	h := GetDefaultHeaders(0)
+	h := GetDefaultHeaders(len(e.Message))
 	err = w.WriteHeaders(h)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return w.WriteBody(e.Message)
 }
 
 func (w *Writer) WriteBody(body []byte) error {

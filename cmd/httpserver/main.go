@@ -21,15 +21,15 @@ func handler(w *response.Writer, req *request.Request) *response.HandlerError {
 	switch req.RequestLine.RequestTarget {
 	case "/yourproblem":
 		statusCode = response.BadRequest
-		contentLength = 32
+		contentLength = 31
 		body = "Your problem is not my problem\n"
 	case "/myproblem":
 		statusCode = response.InternalServerError
-		contentLength = 17
+		contentLength = 16
 		body = "Woopsie, my bad\n"
 	default:
 		statusCode = response.NotFound
-		contentLength = 16
+		contentLength = 15
 		body = "All good, frfr\n"
 	}
 	err = w.WriteStatusLine(statusCode)

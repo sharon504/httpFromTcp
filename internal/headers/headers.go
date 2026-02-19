@@ -81,7 +81,7 @@ func (h *Headers) Parse(data []byte) (n int, done bool, err error) {
 		readN += idx + len(Seperator)
 
 		if string(nextLine) == Seperator {
-			break
+			return readN + len(Seperator), true, nil
 		}
 	}
 	return readN, false, nil

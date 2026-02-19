@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 
 	"httpfromtcp/internal/headers"
 	requestline "httpfromtcp/internal/request-line"
@@ -56,18 +57,17 @@ func (r *Request) parse(data []byte) (int, error) {
 			r.NextState()
 
 		case StateHeaderParse:
-			r.Headers = *headers.NewHeaders()
 			n, done, err := r.Headers.Parse(data[read:])
 			if err != nil {
 				r.SwitchToErrorState()
 				return read, err
 			}
+			read += n
 			if done {
 				r.NextState()
 			} else {
 				return read, nil
 			}
-			read += n
 
 		case StateBodyParse:
 			length, found := r.Headers.Get("Content-Length")
@@ -76,14 +76,14 @@ func (r *Request) parse(data []byte) (int, error) {
 				continue
 			}
 
+			expectedLength, _ := strconv.Atoi(length)
 			bodyLength := len(data[read:])
-			if fmt.Sprintf("%d", bodyLength) != length {
+			if bodyLength < expectedLength {
 				return read, nil
 			}
 
-			r.Body = data[read:]
-			read += bodyLength
-			data = data[read:]
+			r.Body = data[read : read+expectedLength]
+			read += expectedLength
 			r.NextState()
 
 		case StateErr:
@@ -118,7 +118,8 @@ func (r *Request) Done() bool {
 
 func NewRequest() *Request {
 	return &Request{
-		State: StateInit,
+		State:   StateInit,
+		Headers: make(headers.Headers),
 	}
 }
 
