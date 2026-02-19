@@ -22,7 +22,7 @@ type (
 const (
 	StateInit        ParserState = "initialized"
 	StateHeaderParse ParserState = "parsing headers"
-	StateBodyeParse  ParserState = "parsing body"
+	StateBodyParse   ParserState = "parsing body"
 	StateDone        ParserState = "done"
 	StateErr         ParserState = "error"
 )
@@ -69,20 +69,20 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			read += n
 
-		case StateBodyeParse:
+		case StateBodyParse:
 			length, found := r.Headers.Get("Content-Length")
 			if !found {
 				r.NextState()
 				continue
 			}
 
-			bodyLength := len(data)
+			bodyLength := len(data[read:])
 			if fmt.Sprintf("%d", bodyLength) != length {
 				return read, nil
 			}
 
-			r.Body = data
-			read += len(data)
+			r.Body = data[read:]
+			read += bodyLength
 			data = data[read:]
 			r.NextState()
 
@@ -100,8 +100,8 @@ func (r *Request) NextState() {
 	case StateInit:
 		r.State = StateHeaderParse
 	case StateHeaderParse:
-		r.State = StateBodyeParse
-	case StateBodyeParse:
+		r.State = StateBodyParse
+	case StateBodyParse:
 		r.State = StateDone
 	default:
 		return
@@ -133,7 +133,7 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				// Check if we're still expecting body data
-				if request.State == StateBodyeParse {
+				if request.State == StateBodyParse {
 					if length, found := request.Headers.Get("Content-Length"); found && length != "0" {
 						return nil, ErrBodyLengthMismatch
 					}

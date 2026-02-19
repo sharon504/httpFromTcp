@@ -1,7 +1,6 @@
 package request
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -58,7 +57,6 @@ func TestRequestLineParse(t *testing.T) {
 			numBytesPerRead: 3,
 		}
 		r, err := RequestFromReader(reader)
-		fmt.Println(r)
 		require.NoError(t, err)
 		require.NotNil(t, r)
 		assert.Equal(t, "localhost:42069", r.Headers["host"])
