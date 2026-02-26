@@ -39,6 +39,22 @@ func (h *Headers) Get(key string) (string, bool) {
 	return value, true
 }
 
+func (h *Headers) Set(key string, value string) {
+	if _, ok := (*h)[key]; ok {
+		(*h)[key] = fmt.Sprintf("%s, %s", (*h)[key], value)
+		return
+	}
+	(*h)[key] = value
+}
+
+func (h *Headers) Replace(key string, value string) {
+	(*h)[key] = value
+}
+
+func (h *Headers) Delete(key string) {
+	delete((*h), key)
+}
+
 func (h *Headers) Parse(data []byte) (n int, done bool, err error) {
 	readN := 0
 	for {

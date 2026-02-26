@@ -133,7 +133,6 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		n, err := reader.Read(buf[bufIdx:])
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				// Check if we're still expecting body data
 				if request.State == StateBodyParse {
 					if length, found := request.Headers.Get("Content-Length"); found && length != "0" {
 						return nil, ErrBodyLengthMismatch

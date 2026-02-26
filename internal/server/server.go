@@ -2,15 +2,17 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"httpfromtcp/internal/request"
 	"httpfromtcp/internal/response"
+	"httpfromtcp/internal/templates"
 )
 
 type ServerState string
 
-type Handler func(w *response.Writer, req *request.Request) *response.HandlerError
+type Handler func(w *response.Writer, req *request.Request)
 
 type Server struct {
 	State   ServerState
@@ -71,24 +73,14 @@ func (S *Server) listen(ln net.Listener) {
 
 func (S *Server) handle(conn net.Conn) {
 	defer func() {
-		err := conn.Close()
-		if err != nil {
-			println(ErrConnectionClosing)
-			return
+		if err := conn.Close(); err != nil {
+			log.Println(ErrConnectionClosing, err)
 		}
 	}()
 
 	w := response.NewWriter(conn)
-	request, err := request.RequestFromReader(conn)
-	if err != nil {
-		handlerErr := response.NewHandlerError(response.InternalServerError, string(err.Error()))
-		_ = w.WriteError(*handlerErr)
-		return
-	}
+	defer templates.Recover(w)
 
-	handlerErr := S.handler(w, request)
-	if handlerErr != nil {
-		_ = w.WriteError(*handlerErr)
-		return
-	}
+	request := templates.Must(request.RequestFromReader(conn))
+	S.handler(w, request)
 }

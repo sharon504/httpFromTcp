@@ -26,6 +26,12 @@ const (
 	NotFound            StatusCode = 404
 )
 
+var (
+	ErrStatusLineState = fmt.Errorf("wrong state to write status line")
+	ErrHeaderState     = fmt.Errorf("wrong state to write headers")
+	ErrBodyState       = fmt.Errorf("wrong state to write body")
+)
+
 func NewWriter(w io.Writer) *Writer {
 	return &Writer{w}
 }
@@ -85,4 +91,16 @@ func (w *Writer) WriteError(e HandlerError) error {
 func (w *Writer) WriteBody(body []byte) error {
 	_, err := w.writer.Write(body)
 	return err
+}
+
+func (w *Writer) WriteChunkedBody(p []byte) (int, error) {
+	_, _ = w.writer.Write(fmt.Appendf([]byte{}, "%x\r\n", len(p)))
+	n, err := w.writer.Write(p)
+	_, _ = w.writer.Write([]byte("\r\n"))
+	return n, err
+}
+
+func (w *Writer) WriteChunkedBodyDone() (int, error) {
+	n, err := w.writer.Write([]byte("0\r\n\r\n"))
+	return n, err
 }
